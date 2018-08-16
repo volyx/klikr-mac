@@ -6,14 +6,13 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
-import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Objects;
 
 public class Main {
@@ -23,58 +22,49 @@ public class Main {
 		System.setProperty("apple.awt.UIElement", "true");
 
 		cleanClipBoard();
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				while (true) {
+		new Thread(() -> {
+			while (true) {
 
-					try {
-						Thread.sleep(2_000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-
-					final ClipboardOwner clipboardOwner = new ClipboardOwner() {
-						@Override
-						public void lostOwnership(Clipboard clipboard, Transferable contents) {
-							try {
-								System.out.println((String) clipboard.getData(DataFlavor.stringFlavor));
-							} catch (UnsupportedFlavorException e) {
-							} catch (IOException e) {
-							}
-						}
-					};
-					final Transferable contents = systemClipboard.getContents(clipboardOwner);
-					try {
-//							for (DataFlavor transferDataFlavor : contents.getTransferDataFlavors()) {
-//								System.out.println(transferDataFlavor.toString());
-//							}
-						if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
-//							final Object transferData = contents.getTransferData(DataFlavor.imageFlavor);
-							Image image = (Image) contents.getTransferData(DataFlavor.imageFlavor);
-							final BufferedImage bufferedImage = toBufferedImage(image);
-
-							String fileName = "savingAnImage";
-							String ext = "png";
-							File file = new File(fileName + "." + ext);
-							try {
-								ImageIO.write(bufferedImage, ext, file);  // ignore returned boolean
-								uploadFile("https://klikr.org/upload.php", file);
-							} catch(IOException e) {
-								System.out.println("Write error for " + file.getPath() +
-										": " + e.getMessage());
-							}
-							cleanClipBoard();
-						}
-//
-					} catch (UnsupportedFlavorException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-
+				try {
+					Thread.sleep(2_000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
+
+				final ClipboardOwner clipboardOwner = new ClipboardOwner() {
+					@Override
+					public void lostOwnership(Clipboard clipboard, Transferable contents) {
+						try {
+							System.out.println((String) clipboard.getData(DataFlavor.stringFlavor));
+						} catch (UnsupportedFlavorException e) {
+						} catch (IOException e) {
+						}
+					}
+				};
+				final Transferable contents = systemClipboard.getContents(clipboardOwner);
+				try {
+					if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
+						Image image = (Image) contents.getTransferData(DataFlavor.imageFlavor);
+						final BufferedImage bufferedImage = toBufferedImage(image);
+
+						String fileName = "savingAnImage";
+						String ext = "png";
+						File file = new File(fileName + "." + ext);
+						try {
+							ImageIO.write(bufferedImage, ext, file);  // ignore returned boolean
+							uploadFile("https://klikr.org/upload.php", file);
+						} catch(IOException e) {
+							System.out.println("Write error for " + file.getPath() +
+									": " + e.getMessage());
+						} finally {
+							Files.delete(file.toPath());
+						}
+						cleanClipBoard();
+					}
+				} catch (UnsupportedFlavorException | IOException e) {
+					e.printStackTrace();
+				}
+
 			}
 		}).start();
 
@@ -83,7 +73,6 @@ public class Main {
 		try (InputStream is = Main.class.getClassLoader().getResourceAsStream("doc.png");) {
 			Objects.requireNonNull(is);
 			Image image = ImageIO.read(is);
-//			frame.setIconImage(image);
 			if (Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
 				Taskbar.getTaskbar().setIconImage(image);
 			}
