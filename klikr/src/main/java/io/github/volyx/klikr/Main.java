@@ -1,6 +1,4 @@
-package io.github.volyx;
-
-import okhttp3.*;
+package io.github.volyx.klikr;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -12,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Objects;
 import java.util.UUID;
@@ -45,7 +44,7 @@ public class Main {
 							file = Files.createTempFile(fileName, "." + ext).toFile();
 							ImageIO.write(bufferedImage, ext, file);  // ignore returned boolean
 							uploadFile("https://klikr.org/upload.php", file);
-						} catch(IOException e) {
+						} catch (IOException e) {
 							throw new RuntimeException(e);
 						}
 						cleanClipBoard();
@@ -81,55 +80,27 @@ public class Main {
 	}
 
 	public static Boolean uploadFile(String serverURL, File file) {
+
+
 		try {
+			MultipartUtility multipart = new MultipartUtility(serverURL, StandardCharsets.UTF_8.displayName());
+			multipart.addFilePart("imagedata", file);
+			URL url = multipart.finish();
 
-			RequestBody requestBody = new MultipartBody.Builder()
-					.setType(MultipartBody.FORM)
-					.addFormDataPart("imagedata", file.getName(), RequestBody.create(MediaType.parse("png"), file))
-					.build();
-
-			Request request = new Request.Builder()
-					.url(serverURL)
-					.post(requestBody)
-					.build();
-			OkHttpClient client = new OkHttpClient();
-			client.newCall(request).enqueue(new Callback() {
-
-				@Override
-				public void onFailure(Call call, IOException e) {
-					try {
-						Files.delete(file.toPath());
-					} catch (IOException ex) {
-						throw new RuntimeException(ex);
-					}
+			Desktop.getDesktop().browse(url.toURI());
+		} catch (URISyntaxException | IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (file != null) {
+				try {
+					Files.delete(file.toPath());
+				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
+			}
 
-				@Override
-				public void onResponse(Call call, Response response) throws IOException {
-					try {
-						Files.delete(file.toPath());
-					} catch (IOException ex) {
-						throw new RuntimeException(ex);
-					}
-					if (!response.isSuccessful()) {
-						// Handle the error
-					} else {
-						final URL url = response.request().url().url();
-						try {
-							Desktop.getDesktop().browse(url.toURI());
-						} catch (URISyntaxException e) {
-							throw new RuntimeException(e);
-						}
-					}
-				}
-
-			});
-
-			return true;
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
 		}
+		return true;
 	}
 
 

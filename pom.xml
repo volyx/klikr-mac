@@ -21,7 +21,7 @@
         <maven.compiler.target>10</maven.compiler.target>
         <maven.compiler.release>10</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <app.main.class>io.github.volyx.Main</app.main.class>
+        <app.main.class>io.github.volyx.klikr.Main</app.main.class>
     </properties>
 
     <build>
@@ -58,6 +58,20 @@
                     </configuration>
                 </plugin>
                 <plugin>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.22.0</version>
@@ -87,18 +101,5 @@
             </plugins>
         </pluginManagement>
     </build>
-
-
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp</artifactId>
-                <version>3.10.0</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
 
 </project>

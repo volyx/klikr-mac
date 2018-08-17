@@ -35,8 +35,15 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                     </plugin>
                     <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-shade-plugin</artifactId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                            </execution>
+                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -80,9 +87,9 @@
                                         <argument>-outfile</argument>
                                         <argument>Klikr.app</argument>
                                         <argument>-srcdir</argument>
-                                        <argument>target</argument>
-                                        <argument>-srcfiles</argument>
-                                        <argument>${artifactId}-${version}.jar</argument>
+                                        <argument>target/dist</argument>
+                                        <!--<argument>-srcfiles</argument>-->
+                                        <!--<argument>${artifactId}-${version}.jar</argument>-->
                                         <argument>-appclass</argument>
                                         <argument>${app.main.class}</argument>
                                         <argument>-name</argument>
@@ -97,12 +104,39 @@
                 </plugins>
             </build>
         </profile>
-    </profiles>
+        <profile>
+            <id>jlink</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                    </plugin>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-        </dependency>
-    </dependencies>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jlink</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                 <configuration>
+                                    <workingDirectory>${project.parent.basedir}</workingDirectory>
+                                    <executable>./jlink.cmd</executable>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+    </profiles>
 </project>

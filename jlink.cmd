@@ -1,0 +1,1 @@
+jlink --module-path /Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/Contents/Home/jmods:/Users/volyx/Projects/klikr/klikr/target/klikr-1.0-SNAPSHOT.jar --add-modules io.github.volyx.klikr --launcher klikr=io.github.volyx.klikr/io.github.volyx.klikr.Main --output target/dist --strip-debug --compress 2 --no-header-files --no-man-pages

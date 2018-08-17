@@ -1,4 +1,5 @@
-module klikr {
-	requires okhttp3;
+module io.github.volyx.klikr {
 	requires java.desktop;
+
+	exports io.github.volyx.klikr;
 }
