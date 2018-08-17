@@ -14,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Main {
 	public static void main(String[] args) {
@@ -28,41 +29,29 @@ public class Main {
 				try {
 					Thread.sleep(2_000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 
-				final ClipboardOwner clipboardOwner = new ClipboardOwner() {
-					@Override
-					public void lostOwnership(Clipboard clipboard, Transferable contents) {
-						try {
-							System.out.println((String) clipboard.getData(DataFlavor.stringFlavor));
-						} catch (UnsupportedFlavorException e) {
-						} catch (IOException e) {
-						}
-					}
-				};
-				final Transferable contents = systemClipboard.getContents(clipboardOwner);
+				final Transferable contents = systemClipboard.getContents(null);
+				File file = null;
 				try {
 					if (contents.isDataFlavorSupported(DataFlavor.imageFlavor)) {
 						Image image = (Image) contents.getTransferData(DataFlavor.imageFlavor);
 						final BufferedImage bufferedImage = toBufferedImage(image);
 
-						String fileName = "savingAnImage";
+						String fileName = UUID.randomUUID().toString();
 						String ext = "png";
-						File file = new File(fileName + "." + ext);
 						try {
+							file = Files.createTempFile(fileName, "." + ext).toFile();
 							ImageIO.write(bufferedImage, ext, file);  // ignore returned boolean
 							uploadFile("https://klikr.org/upload.php", file);
 						} catch(IOException e) {
-							System.out.println("Write error for " + file.getPath() +
-									": " + e.getMessage());
-						} finally {
-							Files.delete(file.toPath());
+							throw new RuntimeException(e);
 						}
 						cleanClipBoard();
 					}
 				} catch (UnsupportedFlavorException | IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 
 			}
@@ -97,7 +86,6 @@ public class Main {
 			RequestBody requestBody = new MultipartBody.Builder()
 					.setType(MultipartBody.FORM)
 					.addFormDataPart("imagedata", file.getName(), RequestBody.create(MediaType.parse("png"), file))
-//					.addFormDataPart("some-field", "some-value")
 					.build();
 
 			Request request = new Request.Builder()
@@ -109,11 +97,21 @@ public class Main {
 
 				@Override
 				public void onFailure(Call call, IOException e) {
-
+					try {
+						Files.delete(file.toPath());
+					} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
+					throw new RuntimeException(e);
 				}
 
 				@Override
 				public void onResponse(Call call, Response response) throws IOException {
+					try {
+						Files.delete(file.toPath());
+					} catch (IOException ex) {
+						throw new RuntimeException(ex);
+					}
 					if (!response.isSuccessful()) {
 						// Handle the error
 					} else {
@@ -121,7 +119,7 @@ public class Main {
 						try {
 							Desktop.getDesktop().browse(url.toURI());
 						} catch (URISyntaxException e) {
-							e.printStackTrace();
+							throw new RuntimeException(e);
 						}
 					}
 				}
@@ -130,9 +128,8 @@ public class Main {
 
 			return true;
 		} catch (Exception ex) {
-			// Handle the error
+			throw new RuntimeException(ex);
 		}
-		return false;
 	}
 
 
