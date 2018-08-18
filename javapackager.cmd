@@ -7,4 +7,6 @@ javapackager -deploy -Bruntime=/Library/Java/JavaVirtualMachines/jdk-10.0.2.jdk/
 --module io.github.volyx.klikr/io.github.volyx.klikr.Main \
 -name "Klikr" \
 -title "Klikr" \
--Bverbose=true
+-Bverbose=true \
+-Bicon=package/macosx/Klikr.icns \
+-BappVersion=$1
