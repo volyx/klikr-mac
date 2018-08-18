@@ -58,15 +58,6 @@ public class Main {
 
 		JFrame frame = new JFrame("Klikr");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		try (InputStream is = Main.class.getClassLoader().getResourceAsStream("doc.png");) {
-			Objects.requireNonNull(is);
-			Image image = ImageIO.read(is);
-			if (Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE)) {
-				Taskbar.getTaskbar().setIconImage(image);
-			}
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		}
 
 		frame.setSize(new Dimension(0, 0));
 		frame.setVisible(false);
